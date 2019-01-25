@@ -25,10 +25,10 @@ class MyServer(BaseHTTPRequestHandler):
         print( "incomming http: ", self.path )
         if self.path == '/analyze':
             content_length = int(self.headers['Content-Length'])
-            post_data = self.rfile.read(content_length) # <--- Gets the data itself
+            post_data = self.rfile.read(content_length)
             post_data = post_data.decode("utf-8")
-            processor = Processor(self.downloader, self.analyzer)
-            result=processor.process(post_data)
+            processor = Processor(self.analyzer)
+            result = processor.process_url(self.downloader, post_data)
             json_string = json.dumps(result)
             self.wfile.write(json_string.encode())
             self.send_response(200)

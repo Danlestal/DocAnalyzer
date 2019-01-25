@@ -1,22 +1,34 @@
-class Processor(object):
 
-    def __init__(self, downloader, doc_analyzer):
-        self.downloader = downloader
+import hashlib
+
+def create_hash(file):
+    BLOCKSIZE = 65536
+    hasher = hashlib.md5()
+    with open(file, 'rb') as afile:
+        buf = afile.read(BLOCKSIZE)
+        while len(buf) > 0:
+            hasher.update(buf)
+            buf = afile.read(BLOCKSIZE)
+    return hasher.hexdigest()
+
+
+class Processor(object):
+    def __init__(self, doc_analyzer):
         self.doc_analyzer = doc_analyzer
 
-    def process(self, url):
-
-        name = self.downloader.get_url_name(url)
-        real_file = self.downloader.download(url)[0]
-        key_terms = self.doc_analyzer.analyze(real_file)
+    def process_local_file(self, file_path):
+        key_terms = self.doc_analyzer.analyze(file_path)
+        md5 = create_hash(file_path)
         
-        result = {
-            'source_url': url,
-            'name': name,
-            'file': real_file,
+        return {
+            'md5': md5,
+            'file': file_path,
             'keys': key_terms
         }
 
-        return result
-        
-        
+    def process_url(self, downloader, url):
+        real_file = downloader.download(url)[0]
+        local_data_result = self.process_local_file(real_file)
+        local_data_result['source_url'] = url
+        return local_data_result
+
